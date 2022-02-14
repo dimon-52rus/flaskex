@@ -1,0 +1,29 @@
+---
+
+ - hosts: localhost
+   vars:
+    - LOCAL_PROJECT_HOME: "./hello"
+    - PROJECT_HOME: "/opt/docker_flask/flaskex/"
+    - MAIN_PY: "app.py" # main file to launch website
+    - PORT: 5000 # port of the website
+
+
+   tasks:
+     - name: Launch flask website via virtualenv
+       shell: "source /opt/docker_flask/flaskex/ /venv/bin/activate; nohup python /opt/docker_flask/flaskex//{{MAIN_PY}} 2>&1 >/dev/null &"
+
+     - name: Wait for website port to become available
+       wait_for: port=5000 delay=1
+
+
+
+     - name: get url
+       get_url:
+         url: http://localhost:5000
+         dest: /tmp/index.html
+     - name: read html
+       shell: cat /tmp/index.html
+       register: html_contents
+     - name: check for string in html
+       when: html_contents.stdout.find('hello') != -1
+       debug: msg="success!"
